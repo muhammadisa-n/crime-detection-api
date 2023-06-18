@@ -1,8 +1,7 @@
-/venv
+/myvenv
 .env
 __pycache__
 /data
 /models
 /runs
 /utils
-/videoTemp
