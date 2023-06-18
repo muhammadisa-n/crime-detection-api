@@ -304,7 +304,7 @@ class sendforgotpassword(Resource):
         user = Users.query.filter_by(email=token.get('email')).first()
         if password != re_password:
             return {
-                'messege': 'Password does not match', 'code' : 400
+                'message': 'Password does not match', 'code' : 400
             }, 400
         else:
             user.password = generate_password_hash(password)
@@ -359,4 +359,5 @@ def ResetPassword():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True, ssl_context='adhoc') #host is your ip pc /laptop
+    # app.run(host='0.0.0.0', port=5000, debug=True, ssl_context='adhoc') #host is your ip pc /laptop
+     app.run(host='0.0.0.0', port=5000, debug=True) #host is your ip pc /laptop
