@@ -344,7 +344,7 @@ def hello_world():
 @app.route("/opencam", methods=['GET'])
 def opencam():
     print("here")
-    subprocess.run(['python', 'detect.py', '--source', '0', '--weights', 'yolov5s.pt'])
+    subprocess.run(['python', 'detect.py', '--source', '0', '--weights', 'best.pt'])
     return "done"
 
 
@@ -359,5 +359,5 @@ def ResetPassword():
 
 
 if __name__ == '__main__':
-    # app.run(host='0.0.0.0', port=5000, debug=True, ssl_context='adhoc') #host is your ip pc /laptop
-     app.run(host='0.0.0.0', port=5000, debug=True) #host is your ip pc /laptop
+    # app.run(host='0.0.0.0', port=5000, debug=True, ssl_context='adhoc')
+     app.run(host='0.0.0.0', port=5000, debug=True)
