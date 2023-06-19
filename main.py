@@ -343,7 +343,7 @@ def hello_world():
 
 @app.route("/opencam", methods=['GET'])
 def opencam():
-    print("here")
+    print("waittt opencammm")
     subprocess.run(['python', 'detect.py', '--source', '0', '--weights', 'best.pt'])
     return "done"
 
