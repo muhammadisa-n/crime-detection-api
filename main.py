@@ -10,15 +10,17 @@ from flask_mail import Mail, Message
 import jwt, os, random
 from dotenv import load_dotenv
 import subprocess
+import pymysql
+pymysql.install_as_MySQLdb()
 load_dotenv()
 
 
 
 
 app = Flask(__name__)
-api = Api(app,title=os.environ.get("SWAGGER_UI_OAUTH_APP_NAME"))
+api = Api(app,title=os.environ.get("APP_NAME"))
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("SQLALCHEMY_DATABASE_URI")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -330,7 +332,7 @@ class Detect(Resource):
         if video and allowed_file(video.filename):
             filename = secure_filename(video.filename)
             video.save(os.path.join("./videoTemp", filename))
-            subprocess.run(['python', 'detect.py', '--source', f'./videoTemp/{filename}', '--weights', 'best.pt', '--name', f'{filename}'])
+            subprocess.run(['python', 'detect.py', '--source', f'./videoTemp/{filename}', '--weights', 'best.pt','--conf', '0.5', '--name', f'{filename}'])
             os.remove(f'./videoTemp/{filename}')
             print('success remove')
             return send_file(os.path.join(f"./runs/detect/{filename}", filename), mimetype='video/mp4', as_attachment=True, download_name=filename)
@@ -344,7 +346,7 @@ def hello_world():
 @app.route("/opencam", methods=['GET'])
 def opencam():
     print("waittt opencammm")
-    subprocess.run(['python', 'detect.py', '--source', '0', '--weights', 'best.pt'])
+    subprocess.run(['python', 'detect.py', '--source', '0', '--weights', 'best.pt','--conf', '0.5'])
     return "done"
 
 
