@@ -1,5 +1,5 @@
 APP_NAME='Crime Detection | Api'
-DATABASE_URI ='mysql://root:@127.0.0.1:3306/crime_detection'
-SECRET_KEY ='INI RAHASIA'
+DATABASE_URI = 'mysql://root:@127.0.0.1:3306/crime-detection'
+SECRET_KEY ='ini adalah secret key'
 MAIL_USERNAME='muhammadisa226@gmail.com'
 MAIL_PASSWORD='psghgzqnuwbxvtff'

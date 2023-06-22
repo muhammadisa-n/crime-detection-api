@@ -40,6 +40,9 @@ class Users(db.Model):
     address  = db.Column(db.String(255), nullable=True)
     no_hp = db.Column(db.String(15), nullable=True)
     is_verify = db.Column(db.String(20),nullable=False)
+    created_at = db.Column(db.Date)
+    updated_at = db.Column(db.Date)
+    token = db.Column(db.String(5), nullable=True)
 
 #parserRegister
 regParser = reqparse.RequestParser()
@@ -76,13 +79,15 @@ class Registration(Resource):
         user.email    = email
         user.password = generate_password_hash(password)
         user.is_verify = is_verify
+        user.created_at = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        user.updated_at = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
         db.session.add(user)
         msg = Message(subject='Email Verification',sender=os.environ.get("MAIL_USERNAME"),recipients=[user.email])
-        otp =  random.randrange(10000,99999)
-        session['otpsession'] = str(otp)
+        token =  random.randrange(10000,99999)
+        user.token = token
         session['email'] = user.email
         msg.html=render_template(
-        'emailotp.html', otp=otp)
+        'emailotp.html', token=token)
         mail.send(msg)
         db.session.commit()
         return {'message': 'Register successfully, Please check Your email to verification', 'code' : 201}, 201
@@ -96,19 +101,17 @@ class VerifyEmail(Resource):
     def post(self):
         args = otpparser.parse_args()
         otp = args['otp']
-        if 'otpsession' in session:
-            s= session['otpsession']
-            if otp == s:
-                email = session['email']
-                user = Users.query.filter_by(email=email).first()
+        if 'email' in session:
+            email = session['email']
+            user = Users.query.filter_by(email=email).first()
+            if user.token == otp :
                 user.is_verify = 'verified'
+                user.token = None
                 db.session.commit()
-                session.pop('otpsession',None)
+                session.pop('email',None)
                 return {'message' : 'Your email has ben verified, Login Now', 'code' : 200},200
             else:
                 return {'message' : 'Wrong Otp Code', 'code': 401},401
-        else:
-            return {'message' : 'Wrong Otp Code', 'code': 401},401
 
 
 
@@ -225,6 +228,7 @@ class User(Resource):
             user.fullname = fullname
             user.address = address
             user.no_hp = no_hp
+            user.updated_at = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
             db.session.commit()
         except:
             return {
@@ -255,6 +259,7 @@ class Password(Resource):
             user = Users.query.filter_by(id=token.get('user_id')).first()
             if check_password_hash(user.password, oldpassword):
                 user.password = generate_password_hash(newpassword)
+                user.updated_at = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
                 db.session.commit()
             else:
                 return {'message' : 'Old password is wrong', 'code' : 400},400
@@ -310,6 +315,7 @@ class sendforgotpassword(Resource):
             }, 400
         else:
             user.password = generate_password_hash(password)
+            user.updated_at = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
             db.session.commit()
             return {'message' : 'Success Change Password'}, 200
 
