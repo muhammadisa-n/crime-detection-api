@@ -1,0 +1,5 @@
+train: ../dataset/train/images
+val: ../dataset/test/images
+
+nc: 6
+names: ["Abuse", "Fighting", "Normal", "Robbery", "Shooting", "Stealing"]

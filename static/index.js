@@ -38,9 +38,22 @@ window.onload = () => {
       },
       success: function (data) {
         console.log(data);
-      }
+      },
     });
-  })
+  });
+  $("#opencam").click(() => {
+    console.log("evoked openCam");
+    $.ajax({
+      url: "/stopcam",
+      type: "GET",
+      error: function (data) {
+        console.log("upload error", data);
+      },
+      success: function (data) {
+        console.log(data);
+      },
+    });
+  });
 };
 
 function readUrl(input) {
@@ -60,8 +73,7 @@ function readUrl(input) {
   }
 }
 
-
-function openCam(e){
+function openCam(e) {
   console.log("evoked openCam");
   e.preventDefault();
   console.log("evoked openCam");

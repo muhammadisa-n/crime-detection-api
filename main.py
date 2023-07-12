@@ -1,4 +1,4 @@
-from flask import Flask ,session, render_template,request,send_file
+from flask import Flask ,session, render_template,request,send_file,Response
 from flask_restx import Resource, Api, reqparse
 from flask_cors import  CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -11,6 +11,7 @@ import jwt, os, random
 from dotenv import load_dotenv
 import subprocess
 import pymysql
+from camera import VideoCamera
 pymysql.install_as_MySQLdb()
 load_dotenv()
 
@@ -43,6 +44,10 @@ class Users(db.Model):
     created_at = db.Column(db.Date)
     updated_at = db.Column(db.Date)
     token = db.Column(db.String(5), nullable=True)
+class Histories(db.Model):
+    id       = db.Column(db.Integer(), primary_key=True, nullable=False)
+    filename = db.Column(db.String(), nullable=True)
+    tanggal = db.Column(db.Date)
 
 #parserRegister
 regParser = reqparse.RequestParser()
@@ -73,7 +78,7 @@ class Registration(Resource):
         #cek email sudah terdaftar
         user = db.session.execute(db.select(Users).filter_by(email=email)).first()
         if user:
-            return {'message': 'This email address has been used!'}
+            return {'message': 'This email address has been used!'},400
         user          = Users()
         user.fullname    = fullname
         user.email    = email
@@ -340,20 +345,70 @@ class Detect(Resource):
             video.save(os.path.join("./videoTemp", filename))
             subprocess.run(['python', 'detect.py', '--source', f'./videoTemp/{filename}', '--weights', 'best.pt','--conf', '0.5', '--name', f'{filename}'])
             os.remove(f'./videoTemp/{filename}')
-            print('success remove')
+            history = Histories()
+            history.filename = filename
+            history.tanggal =  datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+            db.session.add(history)
+            db.session.commit()
             return send_file(os.path.join(f"./runs/detect/{filename}", filename), mimetype='video/mp4', as_attachment=True, download_name=filename)
         else:
             return {'message' : 'invalid file extension'},400
 
-@app.route("/realtime")
-def hello_world():
-    return render_template('index.html')
+@api.route('/histories')
+class History(Resource):
+    def get(self):
+        history = Histories.query.all()
+        data = [
+            {
+                "id": data.id,
+                "name": data.filename,
+                "tanggal": data.tanggal.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            for data in history
+        ]
+        return data,200
 
-@app.route("/opencam", methods=['GET'])
-def opencam():
-    print("waittt opencammm")
-    subprocess.run(['python', 'detect.py', '--source', '0', '--weights', 'best.pt','--conf', '0.5'])
-    return "done"
+@api.route('/visualisasi')
+class Visualisai(Resource):
+    def get(self):
+        filename_counts = db.session.query(Histories.filename, db.func.count(Histories.id)).group_by(Histories.filename).order_by(db.func.count(Histories.id).desc()).all()
+        data = [
+            {
+                "name": filename,
+                "count": count
+            }
+            for filename, count in filename_counts
+        ]
+        return data, 200
+
+
+
+
+@app.route("/realtime")
+def realtime():
+    title = 'Crime Detection | Realtime'
+    return render_template('realtime.html',title= title)
+
+def gen(camera):
+    while True:
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen(VideoCamera()),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+# @app.route("/opencam", methods=['GET'])
+# def opencam():
+#     print("waittt opencammm")
+#     cmd = ['python', 'detect.py', '--source', '0', '--weights', 'best.pt','--conf', '0.5']
+#     subprocess.Popen(cmd)
+#
+#     return "done"
+
 
 
 @app.route('/resetpassword', methods=["GET"] )
@@ -367,5 +422,4 @@ def ResetPassword():
 
 
 if __name__ == '__main__':
-    # app.run(host='0.0.0.0', port=5000, debug=True, ssl_context='adhoc')
      app.run(host='0.0.0.0', port=5000, debug=True)
