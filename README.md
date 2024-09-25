@@ -1,7 +1,7 @@
 # capstone_s6
 
 clone repo
-`git clone https://github.com/muhammadisa226/crime-detection-api`
+`git clone https://github.com/muhammadisa-n/crime-detection-api`
 
 ## design app
 
